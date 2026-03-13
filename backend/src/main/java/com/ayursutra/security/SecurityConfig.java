@@ -31,18 +31,19 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:5173"));
+                    // ✅ ALLOW ALL ORIGINS FOR HACKATHON DEMO
+                    config.setAllowedOrigins(List.of("*"));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
-                    config.setAllowCredentials(true);
+                    config.setAllowCredentials(false);
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/doctor/**").permitAll() // 🔓 Relaxed for Hackathon
-                        .requestMatchers("/api/protocols/**").permitAll() // 🔓 Relaxed for fetch
-                        .requestMatchers("/api/chat/**").permitAll() // 🔓 AI Chat
-                        .requestMatchers("/api/patient/**").permitAll() // 🔓 Patient routes
+                        .requestMatchers("/api/doctor/**").permitAll()
+                        .requestMatchers("/api/protocols/**").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
+                        .requestMatchers("/api/patient/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
