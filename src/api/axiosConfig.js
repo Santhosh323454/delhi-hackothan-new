@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    baseURL: 'https://maxim-unbrushed-arie.ngrok-free.dev/api',
 });
 
 // Add a request interceptor to attach the JWT token

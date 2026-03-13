@@ -16,7 +16,7 @@ const AddPatientModal = ({ isOpen, onClose, onSuccess }) => {
 
     useEffect(() => {
         if (isOpen) {
-            axios.get('http://localhost:8080/api/protocols/list')
+            axios.get('https://maxim-unbrushed-arie.ngrok-free.dev/api/protocols/list')
                 .then(res => {
                     console.log('Admin List:', res.data);
                     setTherapies(res.data.map(item => typeof item === 'object' ? item.therapyName : item));
@@ -51,7 +51,7 @@ const AddPatientModal = ({ isOpen, onClose, onSuccess }) => {
             const token = localStorage.getItem('token');
             const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-            const res = await axios.post('http://localhost:8080/api/doctor/add-patient', payload, config);
+            const res = await axios.post('https://maxim-unbrushed-arie.ngrok-free.dev/api/doctor/add-patient', payload, config);
             // Backend returns: { id, username, password, name, currentTherapy }
             setCredentials({
                 username: res.data.username,
