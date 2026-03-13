@@ -1,22 +1,23 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://maxim-unbrushed-arie.ngrok-free.dev/api',
+    // 🚩 IMPORTANT: /api-ah thookittu base URL-ah mattum vaiyunga
+    baseURL: 'https://maxim-unbrushed-arie.ngrok-free.dev',
 });
 
-// Add a request interceptor to attach the JWT token and Ngrok bypass header
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
 
-        // 1. JWT Token attach pannuvom
         if (token) {
             config.headers = config.headers || {};
             config.headers['Authorization'] = `Bearer ${token}`;
         }
 
-        // 2. ✅ Ngrok safety page-ah bypass panna intha header MUKKIYAM!
+        // ✅ Bypass ngrok warning
         config.headers['ngrok-skip-browser-warning'] = 'true';
+        // ✅ Ensure Content-Type is set for POST requests
+        config.headers['Content-Type'] = 'application/json';
 
         return config;
     },
