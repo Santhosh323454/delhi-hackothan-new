@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 @Repository
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     Optional<Doctor> findByUserId(Long userId);
+    Optional<Doctor> findByUserUsername(String username);
 
     @Query("SELECT DISTINCT d.specialization FROM Doctor d WHERE d.specialization IS NOT NULL AND d.specialization != ''")
     List<String> findDistinctSpecializations();

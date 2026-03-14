@@ -4,10 +4,12 @@ C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hacko
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\model\Role.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\service\GeminiAiService.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\controller\PatientController.java
+C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\dto\TreatmentRecordResponse.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\repository\TreatmentProtocolRepository.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\service\DoctorService.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\dto\PatientCreateRequest.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\model\Doctor.java
+C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\controller\TreatmentController.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\security\JwtUtil.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\service\AuthService.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\dto\AuthRequest.java
@@ -24,6 +26,7 @@ C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hacko
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\controller\DoctorController.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\dto\AdminSignupRequest.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\exception\GlobalExceptionHandler.java
+C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\model\TreatmentRecord.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\model\PatientFeedback.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\repository\PatientRepository.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\dto\DoctorSignupRequest.java
@@ -31,8 +34,10 @@ C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hacko
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\model\Schedule.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\model\ChatHistory.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\repository\ChatHistoryRepository.java
+C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\repository\TreatmentRecordRepository.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\config\CorsConfig.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\controller\ProtocolController.java
+C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\dto\TreatmentRecordRequest.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\service\AIVoiceService.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\dto\ChatRequest.java
 C:\Users\hp\OneDrive - K.S.Rangasamy College of Technology\Documents\Delhi Hackothan\backend\src\main\java\com\ayursutra\repository\DoctorRepository.java

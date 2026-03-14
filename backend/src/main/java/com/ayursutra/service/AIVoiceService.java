@@ -19,16 +19,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 
-
 /**
- * AIVoiceService  — Smart 3-attempt voice reminder + SMS fallback
+ * AIVoiceService — Smart 3-attempt voice reminder + SMS fallback
  *
  * Daily reminder cycle (all times IST / server-local):
- *   05:45 PM  → Reset every ACTIVE patient's callStatus to PENDING
- *   06:00 PM  → 1st voice call to ALL ACTIVE patients
- *   06:30 PM  → 2nd voice call ONLY to patients still PENDING (i.e., call not answered)
- *   08:00 PM  → 3rd (final) voice call to still-PENDING patients
- *   08:30 PM  → SMS to patients still PENDING after 3rd call (marks them MISSED)
+ * 05:45 PM → Reset every ACTIVE patient's callStatus to PENDING
+ * 06:00 PM → 1st voice call to ALL ACTIVE patients
+ * 06:30 PM → 2nd voice call ONLY to patients still PENDING (i.e., call not
+ * answered)
+ * 08:00 PM → 3rd (final) voice call to still-PENDING patients
+ * 08:30 PM → SMS to patients still PENDING after 3rd call (marks them MISSED)
  */
 @Service
 public class AIVoiceService {
@@ -75,8 +75,10 @@ public class AIVoiceService {
     }
 
     /**
-     * 6:00 PM — Smart reminder: calls ACTIVE patients whose nextCheckupDate is TOMORROW.
-     * On a successful call, advances nextCheckupDate by intervalDays (capped at endDate).
+     * 6:00 PM — Smart reminder: calls ACTIVE patients whose nextCheckupDate is
+     * TOMORROW.
+     * On a successful call, advances nextCheckupDate by intervalDays (capped at
+     * endDate).
      */
     @Scheduled(cron = "0 0 18 * * *")
     public void firstReminderCall() {
@@ -92,8 +94,8 @@ public class AIVoiceService {
         System.out.println("[AIVoiceService] 6:00 PM — " + patients.size() + " patient(s) due for tomorrow's checkup.");
 
         for (Patient patient : patients) {
-            String phone   = patient.getUser().getPhone();
-            String name    = patient.getUser().getName();
+            String phone = patient.getUser().getPhone();
+            String name = patient.getUser().getName();
             String therapy = patient.getCurrentTherapy() != null ? patient.getCurrentTherapy() : "Ayurvedic";
 
             boolean success = makeVoiceCall(phone, name, therapy);
@@ -131,8 +133,8 @@ public class AIVoiceService {
                 .toList();
 
         for (Patient patient : pendingPatients) {
-            String phone   = patient.getUser().getPhone();
-            String name    = patient.getUser().getName();
+            String phone = patient.getUser().getPhone();
+            String name = patient.getUser().getName();
             String therapy = patient.getCurrentTherapy() != null ? patient.getCurrentTherapy() : "Ayurvedic";
 
             boolean success = makeVoiceCall(phone, name, therapy);
@@ -146,7 +148,8 @@ public class AIVoiceService {
     }
 
     /**
-     * 8:00 PM — Final voice call for patients still PENDING after both earlier attempts.
+     * 8:00 PM — Final voice call for patients still PENDING after both earlier
+     * attempts.
      */
     @Scheduled(cron = "0 0 20 * * *")
     public void finalReminderCall() {
@@ -158,8 +161,8 @@ public class AIVoiceService {
                 .toList();
 
         for (Patient patient : pendingPatients) {
-            String phone   = patient.getUser().getPhone();
-            String name    = patient.getUser().getName();
+            String phone = patient.getUser().getPhone();
+            String name = patient.getUser().getName();
             String therapy = patient.getCurrentTherapy() != null ? patient.getCurrentTherapy() : "Ayurvedic";
 
             boolean success = makeVoiceCall(phone, name, therapy);
@@ -175,10 +178,11 @@ public class AIVoiceService {
 
     /**
      * 8:30 PM — Send SMS to any patient whose call status is still PENDING
-     * after all three voice call attempts.  Marks them as MISSED.
+     * after all three voice call attempts. Marks them as MISSED.
      *
      * Tamil SMS text:
-     *   "Vanakkam, ungalukku nalaikku treatment irukkira dhu. Sariyaana nerathirku varaavum."
+     * "Vanakkam, ungalukku nalaikku treatment irukkira dhu. Sariyaana nerathirku
+     * varaavum."
      */
     @Scheduled(cron = "0 30 20 * * *")
     public void sendFallbackSms() {
@@ -209,7 +213,8 @@ public class AIVoiceService {
     /**
      * Initiates a Twilio voice call with a Tamil/English reminder message.
      *
-     * @return true  if the Twilio API accepted the call (does NOT guarantee the patient answered)
+     * @return true if the Twilio API accepted the call (does NOT guarantee the
+     *         patient answered)
      *         false if an error occurred
      */
     public boolean makeVoiceCall(String phoneNumber, String patientName, String therapyName) {
@@ -227,9 +232,8 @@ public class AIVoiceService {
 
         String message = String.format(
                 "Vanakkam %s, this is a reminder from AyurSutra. "
-                + "You have a %s treatment scheduled for tomorrow. Please be on time.",
-                patientName, therapyName
-        );
+                        + "You have a %s treatment scheduled for tomorrow. Please be on time.",
+                patientName, therapyName);
 
         try {
             String twiml = "<Response><Say language=\"en-IN\">" + message + "</Say></Response>";
@@ -239,8 +243,7 @@ public class AIVoiceService {
             Call call = Call.creator(
                     new PhoneNumber(formattedPhone),
                     new PhoneNumber(twilioPhoneNumber),
-                    URI.create(twimlUrl)
-            ).create();
+                    URI.create(twimlUrl)).create();
 
             System.out.println("[AIVoiceService] Call initiated to " + formattedPhone
                     + " | SID: " + call.getSid());
@@ -264,8 +267,7 @@ public class AIVoiceService {
             Message msg = Message.creator(
                     new PhoneNumber(toNumber),
                     new PhoneNumber(twilioPhoneNumber),
-                    body
-            ).create();
+                    body).create();
             System.out.println("[AIVoiceService] SMS sent to " + toNumber
                     + " | SID: " + msg.getSid());
         } catch (Exception e) {

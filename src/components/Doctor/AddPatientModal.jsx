@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Copy, CheckCircle, User, Key, X } from 'lucide-react';
 
 const AddPatientModal = ({ isOpen, onClose, onSuccess }) => {
@@ -16,15 +15,17 @@ const AddPatientModal = ({ isOpen, onClose, onSuccess }) => {
 
     useEffect(() => {
         if (isOpen) {
-            axios.get('https://maxim-unbrushed-arie.ngrok-free.dev/api/protocols/list')
-                .then(res => {
-                    console.log('Admin List:', res.data);
-                    setTherapies(res.data.map(item => typeof item === 'object' ? item.therapyName : item));
-                })
-                .catch(err => {
-                    console.error("Error fetching therapies:", err);
-                    setTherapies([]);
-                });
+            import('../../api/axiosConfig').then(({ default: api }) => {
+                api.get('/protocols/list')
+                    .then(res => {
+                        console.log('Admin Protocol List:', res.data);
+                        setTherapies(res.data.map(item => typeof item === 'object' ? item.therapyName : item));
+                    })
+                    .catch(err => {
+                        console.error("Error fetching therapies:", err);
+                        setTherapies([]);
+                    });
+            });
         } else {
             // Reset everything when closed
             setCredentials(null);
@@ -39,6 +40,7 @@ const AddPatientModal = ({ isOpen, onClose, onSuccess }) => {
             return;
         }
         try {
+            const { default: api } = await import('../../api/axiosConfig');
             const payload = {
                 name: formData.fullName,
                 email: formData.email,
@@ -48,10 +50,7 @@ const AddPatientModal = ({ isOpen, onClose, onSuccess }) => {
             };
             console.log("Sending Data:", payload);
 
-            const token = localStorage.getItem('token');
-            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-            const res = await axios.post('https://maxim-unbrushed-arie.ngrok-free.dev/api/doctor/add-patient', payload, config);
+            const res = await api.post('/doctor/add-patient', payload);
             // Backend returns: { id, username, password, name, currentTherapy }
             setCredentials({
                 username: res.data.username,
@@ -134,7 +133,7 @@ const AddPatientModal = ({ isOpen, onClose, onSuccess }) => {
                         onClick={handleDone}
                         className="w-full bg-[#2D5A27] text-white py-4 rounded-2xl font-bold hover:bg-[#23461E] shadow-lg transition-colors"
                     >
-                        Done — Close & Refresh
+                        Done — Close &amp; Refresh
                     </button>
                 </div>
             </div>

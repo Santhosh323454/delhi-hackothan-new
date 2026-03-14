@@ -11,37 +11,78 @@ const PatientDetailView = () => {
     const [isEditingOverride, setIsEditingOverride] = useState(false);
     const [draftOverride, setDraftOverride] = useState({ dos: '', donts: '' });
     const [isDeleting, setIsDeleting] = useState(false);
+    const [fetchedProtocol, setFetchedProtocol] = useState(null);
+    const [treatmentHistory, setTreatmentHistory] = useState([]);
 
     const patientFromContext = patients.find(p => p.id === parseInt(id) || p.id === id);
-    const [patient, setPatient] = useState(patientFromContext || null);
-    const [loadingPatient, setLoadingPatient] = useState(!patientFromContext);
+    const [patient, setPatient] = useState(null);
+    const [loadingPatient, setLoadingPatient] = useState(true);
 
-    // Fetch from backend if context is suddenly empty (e.g. hard refresh)
+    // Always fetch latest from backend first to avoid ID collisions with hardcoded dummy data
     useEffect(() => {
-        if (!patientFromContext && id) {
-            setLoadingPatient(true);
-            import('../../api/axiosConfig').then(({ default: api }) => {
-                api.get('/doctor/patients')
-                    .then(res => {
-                        const found = res.data.find(p => p.id === parseInt(id) || p.id === id);
-                        if (found) setPatient(found);
-                    })
-                    .catch(err => console.error("Failed to fetch patient:", err))
-                    .finally(() => setLoadingPatient(false));
-            });
-        } else if (patientFromContext) {
-            setPatient(patientFromContext);
-            setLoadingPatient(false);
+        if (!id) return;
+
+        setLoadingPatient(true);
+
+        import('../../api/axiosConfig').then(({ default: api }) => {
+            // Fetch Patient Details
+            api.get('/doctor/patients')
+                .then(res => {
+                    const found = res.data.find(p => p.id === parseInt(id) || p.id === id);
+                    if (found) {
+                        setPatient(found);
+                    } else {
+                        // fallback to context patients (read at time of fetch, not via dependency)
+                        const fallback = patients.find(p => p.id === parseInt(id) || p.id === id);
+                        if (fallback) setPatient(fallback);
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to fetch patient:", err);
+                    const fallback = patients.find(p => p.id === parseInt(id) || p.id === id);
+                    if (fallback) setPatient(fallback);
+                })
+                .finally(() => setLoadingPatient(false));
+
+            // Fetch Treatment History
+            api.get(`/treatments/patient/${id}`)
+                .then(res => {
+                    if (Array.isArray(res.data)) setTreatmentHistory(res.data);
+                    else setTreatmentHistory([]);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch treatment history:", err);
+                    setTreatmentHistory([]);
+                });
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]); // Only re-run when the patient ID changes — do NOT add patients/patientFromContext here
+
+    // Fetch protocol from backend when patient has a therapy not in local masterTemplates
+    useEffect(() => {
+        const therapyName = patient?.currentTherapy;
+        if (!therapyName) return;
+        // Only fetch from DB if masterTemplates doesn't already have it
+        if (masterTemplates[therapyName]) {
+            setFetchedProtocol(masterTemplates[therapyName]);
+            return;
         }
-    }, [id, patientFromContext]);
+        import('../../api/axiosConfig').then(({ default: api }) => {
+            api.get(`/protocols/${encodeURIComponent(therapyName)}`)
+                .then(res => {
+                    if (res.data) setFetchedProtocol({ dos: res.data.dos || '', donts: res.data.donts || '' });
+                })
+                .catch(() => setFetchedProtocol(null));
+        });
+    }, [patient?.currentTherapy, masterTemplates]);
 
     // Update draft overrides when patient or templates load
     useEffect(() => {
         if (patient && isEditingOverride) {
-            const rules = patient.overrideRules || masterTemplates[patient.currentTherapy] || masterTemplates.Vamana || { dos: '', donts: '' };
+            const rules = patient.overrideRules || fetchedProtocol || masterTemplates[patient.currentTherapy] || { dos: '', donts: '' };
             setDraftOverride({ dos: rules.dos || '', donts: rules.donts || '' });
         }
-    }, [isEditingOverride, patient, masterTemplates]);
+    }, [isEditingOverride, patient, masterTemplates, fetchedProtocol]);
 
     if (loadingPatient) {
         return (
@@ -68,7 +109,7 @@ const PatientDetailView = () => {
         );
     }
 
-    const rules = patient.overrideRules || masterTemplates[patient.currentTherapy] || masterTemplates.Vamana || { dos: 'No standard protocol', donts: 'No standard protocol' };
+    const rules = patient.overrideRules || fetchedProtocol || masterTemplates[patient.currentTherapy] || { dos: 'No standard protocol defined.', donts: 'No standard protocol defined.' };
     const isOverridden = !!patient.overrideRules;
 
     const handleSaveOverride = () => {
@@ -298,30 +339,77 @@ const PatientDetailView = () => {
                         </div>
                     </div>
 
-                    {/* Treatment History Section */}
+                    {/* Treatment History Timeline */}
                     <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-ayur-gold/10">
                         <div className="flex items-center gap-3 mb-6 text-ayur-green">
                             <ClipboardList size={20} className="text-ayur-gold" />
                             <h2 className="font-serif font-bold text-lg">Treatment History</h2>
                         </div>
-                        <div className="space-y-4">
-                            {[1, 2, 3].map((session, i) => (
-                                <div key={i} className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 hover:border-ayur-gold/20 transition-colors">
-                                    <div className="flex-shrink-0 w-12 h-12 bg-ayur-cream rounded-xl flex items-center justify-center text-ayur-gold font-bold">
-                                        S{3 - i}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <h4 className="font-bold text-sm text-ayur-green">Session Completed</h4>
-                                            <span className="text-[10px] text-gray-400 font-bold uppercase">{10 - (i * 2)} days ago</span>
+                        
+                        {(!Array.isArray(treatmentHistory) || treatmentHistory.length === 0) ? (
+                            <div className="text-center p-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                <p className="text-sm font-bold text-gray-500">No treatment history available</p>
+                                <p className="text-xs text-gray-400 mt-1">Visit notes will appear here once added in the dashboard.</p>
+                            </div>
+                        ) : (
+                            <div className="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-ayur-gold/20">
+                                {treatmentHistory.map((record, i) => {
+                                    let dateStr = "Unknown Date";
+                                    try {
+                                        if (record.visitDate) {
+                                            const d = new Date(record.visitDate);
+                                            // Check if date is valid
+                                            if (!isNaN(d.getTime())) {
+                                                dateStr = d.toLocaleDateString('en-GB', {
+                                                    day: '2-digit', month: 'short', year: 'numeric'
+                                                });
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.error("Date format error:", e);
+                                    }
+                                    
+                                    return (
+                                        <div key={record.id || i} className="relative">
+                                            {/* ... */}
+                                            <div className="absolute -left-[30px] top-1.5 w-4 h-4 rounded-full bg-white border-4 border-ayur-gold z-10 shadow-sm" />
+                                            
+                                            <div className="bg-ayur-cream p-5 rounded-2xl border border-ayur-gold/10 hover:border-ayur-gold/30 transition-colors">
+                                                <div className="flex justify-between items-center mb-3 border-b border-ayur-gold/10 pb-3">
+                                                    <span className="text-xs font-bold uppercase tracking-widest text-ayur-green/60">
+                                                        {dateStr}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-ayur-charcoal/40 bg-white px-2 py-1 rounded-md border border-gray-100">
+                                                        Dr. {typeof record.doctorName === 'string' ? record.doctorName : 'Unknown'}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <h4 className="text-[10px] uppercase font-bold text-ayur-gold tracking-widest mb-1">Treatment Method</h4>
+                                                        <p className="text-sm font-bold text-ayur-charcoal whitespace-pre-wrap">{typeof record.treatmentMethod === 'string' ? record.treatmentMethod : JSON.stringify(record.treatmentMethod || '')}</p>
+                                                    </div>
+                                                    
+                                                    {record.medicines && (
+                                                        <div>
+                                                            <h4 className="text-[10px] uppercase font-bold text-ayur-gold tracking-widest mb-1">Medicines / Tablets</h4>
+                                                            <p className="text-sm text-ayur-charcoal whitespace-pre-wrap">{typeof record.medicines === 'string' ? record.medicines : JSON.stringify(record.medicines)}</p>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {record.notes && (
+                                                        <div className="bg-white/50 p-3 rounded-xl mt-2">
+                                                            <h4 className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-1">Doctor Notes</h4>
+                                                            <p className="text-xs text-gray-600 italic whitespace-pre-wrap">"{typeof record.notes === 'string' ? record.notes : JSON.stringify(record.notes)}"</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p className="text-xs text-ayur-charcoal/60 leading-relaxed">
-                                            {patient.currentTherapy || 'Consultation'} administered by {patient.therapist || 'Specialist'}. Patient showed stable vitals throughout the procedure. Mild fatigue post-session, advised standard rest protocol.
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-ayur-green p-6 rounded-[2rem] shadow-sm text-white relative overflow-hidden">
@@ -340,4 +428,44 @@ const PatientDetailView = () => {
     );
 };
 
-export default PatientDetailView;
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="p-10 m-6 bg-red-50 border-2 border-red-200 rounded-3xl max-w-4xl mx-auto shadow-sm">
+                    <h2 className="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">
+                        <X className="text-red-500" /> Page Crashed (React Render Error)
+                    </h2>
+                    <p className="text-sm text-red-800 mb-4">Please copy this error and share it so we can fix the bug:</p>
+                    <pre className="text-xs font-mono bg-white p-4 rounded-xl text-red-900 border border-red-100 overflow-x-auto whitespace-pre-wrap">
+                        {this.state.error?.toString()}
+                        <br />
+                        {this.state.error?.stack}
+                    </pre>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="mt-6 px-6 py-2 bg-red-600 text-white rounded-full font-bold shadow-md hover:bg-red-700 transition"
+                    >
+                        Try Reloading Page
+                    </button>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
+
+const SafePatientDetailView = (props) => (
+    <ErrorBoundary>
+        <PatientDetailView {...props} />
+    </ErrorBoundary>
+);
+
+export default SafePatientDetailView;

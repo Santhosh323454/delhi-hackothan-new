@@ -1,19 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, Clock, Bell, ArrowUpRight } from 'lucide-react';
 import { useTherapy } from '../context/TherapyContext';
 
 const StatusCards = () => {
-    const { user, patients } = useTherapy();
+    const { user } = useTherapy();
+    const [patientData, setPatientData] = useState({ currentTherapy: 'Consulting', recoveryProgress: 0 });
 
-    const patientData = user?.role === 'patient'
-        ? patients.find(p => p.id === user.id) || patients[0] || { currentTherapy: 'Consulting', recovery: 0 }
-        : patients[0] || { currentTherapy: 'Consulting', recovery: 0 };
+    useEffect(() => {
+        // For patient role, fetch their own data from backend using their username
+        if (user?.role === 'patient') {
+            import('../api/axiosConfig').then(({ default: api }) => {
+                api.get('/patient/me')
+                    .then(res => {
+                        if (res.data) setPatientData(res.data);
+                    })
+                    .catch(() => {
+                        // Fallback: no-op; keep default
+                    });
+            });
+        }
+    }, [user]);
 
     const cards = [
         {
-            title: 'Next Therapy',
-            value: patientData.currentTherapy,
+            title: 'Current Therapy',
+            value: patientData.currentTherapy || 'Consulting',
             sub: 'Today at 04:30 PM',
             icon: Clock,
             color: 'bg-ayur-green/80 text-ayur-cream backdrop-blur-md',
@@ -27,7 +39,7 @@ const StatusCards = () => {
         },
         {
             title: 'Recovery Progress',
-            value: `${patientData.recovery}%`,
+            value: `${patientData.recoveryProgress || 0}%`,
             sub: '+12% this week',
             icon: Activity,
             color: 'bg-white/70 text-ayur-green border border-ayur-gold/10 backdrop-blur-md',

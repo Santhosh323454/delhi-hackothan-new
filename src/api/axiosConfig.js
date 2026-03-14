@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-    // 🚩 IMPORTANT: /api-ah thookittu base URL-ah mattum vaiyunga
-    baseURL: 'https://maxim-unbrushed-arie.ngrok-free.dev',
+    // 🚩 Localhost-la run panna ippo idhu dhaan mukkiyam
+    baseURL: 'http://localhost:8080/api',
 });
 
 api.interceptors.request.use(
@@ -14,9 +14,10 @@ api.interceptors.request.use(
             config.headers['Authorization'] = `Bearer ${token}`;
         }
 
-        // ✅ Bypass ngrok warning
+        // ✅ Localhost-la irukkumbodhu idhu thavai illai, aana irundhalum thappu illa
         config.headers['ngrok-skip-browser-warning'] = 'true';
-        // ✅ Ensure Content-Type is set for POST requests
+
+        // ✅ Content-Type setting
         config.headers['Content-Type'] = 'application/json';
 
         return config;

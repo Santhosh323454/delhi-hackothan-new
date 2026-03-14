@@ -5,6 +5,8 @@ import { MoreVertical, ExternalLink, Trash2, X, AlertCircle, Phone, Edit, Loader
 import { motion, AnimatePresence } from 'framer-motion';
 import EditPatientModal from './EditPatientModal';
 import TreatmentPlanner from './TreatmentPlanner';
+import TreatmentModal from './TreatmentModal';
+import { Plus } from 'lucide-react';
 
 const PatientTable = () => {
     const { deletePatient } = useTherapy();
@@ -17,6 +19,7 @@ const PatientTable = () => {
     const [loading, setLoading] = useState(true);
     const [callingPatientId, setCallingPatientId] = useState(null); // tracks which patient's call is in flight
     const [planningPatient, setPlanningPatient]   = useState(null); // patient whose plan modal is open
+    const [treatmentModalPatient, setTreatmentModalPatient] = useState(null); // patient for adding treatment notes
 
     // 🛠️ Fetch Patients from Backend
     useEffect(() => {
@@ -139,8 +142,17 @@ const PatientTable = () => {
                                                     {initials}
                                                 </div>
                                                 <div>
-                                                    <button onClick={(e) => { e.stopPropagation(); navigate(`/doctor/patient/${patient?.id}`) }} className="text-sm font-bold text-ayur-green leading-tight hover:underline cursor-pointer text-left focus:outline-none">{name}</button>
-                                                    <p className="text-[10px] text-gray-400 font-sans mt-0.5">{patient.user?.uniqueId || 'ID: Pending'}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <button onClick={(e) => { e.stopPropagation(); navigate(`/doctor/patient/${patient?.id}`) }} className="text-sm font-bold text-ayur-green leading-tight hover:underline cursor-pointer text-left focus:outline-none">{name}</button>
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); setTreatmentModalPatient(patient); }}
+                                                            className="flex items-center justify-center p-1 rounded-full bg-ayur-gold/20 text-ayur-gold hover:bg-ayur-gold hover:text-white transition-all shadow-sm"
+                                                            title="Add Treatment Note"
+                                                        >
+                                                            <Plus size={14} />
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-400 font-sans mt-0.5">{patient.user?.username || 'ID: Pending'}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -266,6 +278,17 @@ const PatientTable = () => {
                     />
                 )}
             </AnimatePresence>
+
+            {/* 📝 Treatment History Modal */}
+            <TreatmentModal
+                isOpen={!!treatmentModalPatient}
+                onClose={() => setTreatmentModalPatient(null)}
+                patientId={treatmentModalPatient?.id}
+                patientName={treatmentModalPatient?.user?.name || treatmentModalPatient?.name}
+                onTreatmentSaved={() => {
+                    // Refresh not strictly required here if we fetch on detail view, but we can if want
+                }}
+            />
         </div>
     );
 };

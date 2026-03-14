@@ -19,7 +19,7 @@ export const TherapyProvider = ({ children }) => {
         ];
     });
 
-    // Persistent Templates State
+    // Persistent Templates State — seeded with hardcoded defaults, then merged with DB data
     const [masterTemplates, setMasterTemplates] = useState(() => {
         const savedTemplates = localStorage.getItem('ayur_templates');
         return savedTemplates ? JSON.parse(savedTemplates) : {
@@ -30,6 +30,42 @@ export const TherapyProvider = ({ children }) => {
             Raktamokshana: { dos: 'Assess bleeding time', donts: 'Apply pressure and rest', icon: 'Activity' },
         };
     });
+
+    // ── Load all protocols from DB and merge into masterTemplates ──────────────
+    useEffect(() => {
+        const loadProtocolsFromDB = async () => {
+            try {
+                const { default: api } = await import('../api/axiosConfig');
+                // 1. Get list of all protocol names
+                const listRes = await api.get('/protocols/list');
+                const names = listRes.data || [];
+                if (names.length === 0) return;
+
+                // 2. Fetch each protocol's dos/donts and merge
+                const fetched = await Promise.all(
+                    names.map(name =>
+                        api.get(`/protocols/${encodeURIComponent(name)}`)
+                            .then(r => ({ name, dos: r.data.dos || '', donts: r.data.donts || '' }))
+                            .catch(() => null)
+                    )
+                );
+
+                const dbTemplates = {};
+                fetched.forEach(item => {
+                    if (item) {
+                        dbTemplates[item.name] = { dos: item.dos, donts: item.donts };
+                    }
+                });
+
+                // Merge DB templates into masterTemplates (DB takes precedence)
+                setMasterTemplates(prev => ({ ...prev, ...dbTemplates }));
+            } catch (err) {
+                console.warn('Could not load protocols from DB:', err.message);
+            }
+        };
+
+        loadProtocolsFromDB();
+    }, []); // Run once on app start
 
     // Sync to LocalStorage
     useEffect(() => {
